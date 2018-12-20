@@ -1,0 +1,62 @@
+task task_clean(dependsOn: clean) << {
+    println 'task_clean.doLast'
+}
+
+task task_assembleDebug(dependsOn: 'assembleDebug') << {
+    println 'task_assembleDebug.doLast'
+}
+
+task_assembleDebug.dependsOn task_clean
+
+task debugToFir() << {
+//    dependsOn 'assembleDebug'
+
+    def app_name = 'FirUploadPython'
+    def bundle_id = project.android.defaultConfig.applicationId
+    def version_name = project.android.defaultConfig.versionName
+    def version_code = project.android.defaultConfig.versionCode
+
+    def icon_path = rootDir.path + '/app/src/main/res/mipmap-xxhdpi/ic_launcher.png'
+    def apk_path = '' //动态获取
+    def change_log = '版本更新 1.0.3'.replace(' ','') // 参数不能包含空格
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                if (variant.buildType.name == "debug") {
+                    if (outputFile.name.endsWith('debug.apk')) {
+                        apk_path = outputFile
+                    }
+                }
+            }
+        }
+    }
+
+    println apk_path
+
+    //执行Python脚本
+    def process = """python 
+        fir_upload.py 
+        ${app_name} 
+        ${bundle_id} 
+        ${version_name} 
+        ${version_code} 
+        ${icon_path} 
+        ${apk_path} 
+        ${change_log}
+        """.execute()
+
+    println "开始上传至Fir"
+    //获取Python脚本日志，便于出错调试
+    ByteArrayOutputStream result = new ByteArrayOutputStream()
+    def inputStream = process.getInputStream()
+    byte[] buffer = new byte[1024]
+    int length
+    while ((length = inputStream.read(buffer)) != -1) {
+        result.write(buffer, 0, length)
+    }
+    print result.toString("UTF-8")
+    println "上传结束 "
+}
+
