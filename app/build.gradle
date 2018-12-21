@@ -7,8 +7,8 @@ android {
         applicationId "learn.cxb.com.firuploadpython"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 103
-        versionName "1.0.3"
+        versionCode 110
+        versionName "1.1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
